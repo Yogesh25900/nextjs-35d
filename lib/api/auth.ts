@@ -1,7 +1,6 @@
 //AUTHENTICATION API CALLS
 import {API} from "./endpoints";
-import axios from "axios";
-
+import axios from "./axios";
 export const  register = async(registrationData:any) =>{
     try{
         const repsonse = await axios.post(API.AUTH.REGISTER,registrationData)
@@ -10,3 +9,4 @@ export const  register = async(registrationData:any) =>{
         throw new Error(err.response?.data.message ||err.message || "Registration failed");
     }
 }
+

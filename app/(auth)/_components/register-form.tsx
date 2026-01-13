@@ -23,44 +23,72 @@ export default function RegisterForm() {
     const [pending, setTransition] = useTransition()
     const [error,setError]= useState("")
   
-    const submit = async (values: RegisterData) => {
-      setError("");
-      try{
-        const response =await handleRegister(values);
-        if(!response.success){
-          throw new Error(response.message || "Registration failed");
-            // REDIRECT TO LOGIN PAGE
+        const submit = async (values: RegisterData) => {
+            setError("");
+            try{
+                
+              console.log("Submitting registration form", values);
+                const response =await handleRegister(values);
+                if(!response.success){
+                        // REDIRECT TO LOGIN PAGE
+                    alert(response.message);
+                    return;
            
-        }
-         setTransition(() => {
-                router.push("/login");
-            });
+                }
+                 setTransition(() => {
+                                router.push("/login");
+                        });
+                console.log("Registration successful", response.data);
   
-      }catch(err: any){
-        setError(err.message || "Registration failed");
-      }
-        // setTransition( async () => {
-        //     await new Promise((resolve) => setTimeout(resolve, 1000));
-        //     router.push("/login");
-        // })
-        // // GO TO LOGIN PAGE
-        // console.log("register", values);
-    };
+            }catch(err: any){
+                setError(err.message || "Registration failed");
+            }
+        };
 
     return (
         <form onSubmit={handleSubmit(submit)} className="space-y-4">
             <div className="space-y-1">
-                <label className="text-sm font-medium" htmlFor="name">Full name</label>
+                <label className="text-sm font-medium" htmlFor="firstName">First name</label>
                 <input
-                    id="name"
+                    id="firstName"
                     type="text"
-                    autoComplete="name"
+                    autoComplete="given-name"
                     className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
-                    {...register("name")}
-                    placeholder="Jane Doe"
+                    {...register("firstName")}
+                    placeholder="Jane"
                 />
-                {errors.name?.message && (
-                    <p className="text-xs text-red-600">{errors.name.message}</p>
+                {errors.firstName?.message && (
+                    <p className="text-xs text-red-600">{errors.firstName.message}</p>
+                )}
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="lastName">Last name</label>
+                <input
+                    id="lastName"
+                    type="text"
+                    autoComplete="family-name"
+                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+                    {...register("lastName")}
+                    placeholder="Doe"
+                />
+                {errors.lastName?.message && (
+                    <p className="text-xs text-red-600">{errors.lastName.message}</p>
+                )}
+            </div>
+
+            <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="username">Username</label>
+                <input
+                    id="username"
+                    type="text"
+                    autoComplete="username"
+                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+                    {...register("username")}
+                    placeholder="janedoe"
+                />
+                {errors.username?.message && (
+                    <p className="text-xs text-red-600">{errors.username.message}</p>
                 )}
             </div>
 
