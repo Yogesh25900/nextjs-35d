@@ -1,157 +1,125 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
+import { RegisterData, registerSchema } from "../schema";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { handleRegister } from "@/lib/actions/auth-action";
 
 export default function RegisterForm() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+    const router = useRouter();
+    const {
+        register,
+        handleSubmit,
+        formState: { errors, isSubmitting },
+    } = useForm<RegisterData>({
+        resolver: zodResolver(registerSchema),
+        mode: "onSubmit",
+    });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+    const [pending, setTransition] = useTransition()
+    const [error,setError]= useState("")
+  
+    const submit = async (values: RegisterData) => {
+      setError("");
+      try{
+        const response =await handleRegister(values);
+        if(!response.success){
+          throw new Error(response.message || "Registration failed");
+            // REDIRECT TO LOGIN PAGE
+           
+        }
+         setTransition(() => {
+                router.push("/login");
+            });
+  
+      }catch(err: any){
+        setError(err.message || "Registration failed");
+      }
+        // setTransition( async () => {
+        //     await new Promise((resolve) => setTimeout(resolve, 1000));
+        //     router.push("/login");
+        // })
+        // // GO TO LOGIN PAGE
+        // console.log("register", values);
+    };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(false);
-    setIsLoading(true);
+    return (
+        <form onSubmit={handleSubmit(submit)} className="space-y-4">
+            <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="name">Full name</label>
+                <input
+                    id="name"
+                    type="text"
+                    autoComplete="name"
+                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+                    {...register("name")}
+                    placeholder="Jane Doe"
+                />
+                {errors.name?.message && (
+                    <p className="text-xs text-red-600">{errors.name.message}</p>
+                )}
+            </div>
 
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
+            <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="email">Email</label>
+                <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+                    {...register("email")}
+                    placeholder="you@example.com"
+                />
+                {errors.email?.message && (
+                    <p className="text-xs text-red-600">{errors.email.message}</p>
+                )}
+            </div>
 
-    try {
-      // Dummy async flow to mimic an API call
-      await new Promise((resolve) => setTimeout(resolve, 600));
+            <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="password">Password</label>
+                <input
+                    id="password"
+                    type="password"
+                    autoComplete="new-password"
+                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+                    {...register("password")}
+                    placeholder="••••••"
+                />
+                {errors.password?.message && (
+                    <p className="text-xs text-red-600">{errors.password.message}</p>
+                )}
+            </div>
 
-      setSuccess(true);
-      setFormData({ name: "", email: "", password: "", confirmPassword: "" });
-      setTimeout(() => router.push("/login"), 1200);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+            <div className="space-y-1">
+                <label className="text-sm font-medium" htmlFor="confirmPassword">Confirm password</label>
+                <input
+                    id="confirmPassword"
+                    type="password"
+                    autoComplete="new-password"
+                    className="h-10 w-full rounded-md border border-black/10 dark:border-white/15 bg-background px-3 text-sm outline-none focus:border-foreground/40"
+                    {...register("confirmPassword")}
+                    placeholder="••••••"
+                />
+                {errors.confirmPassword?.message && (
+                    <p className="text-xs text-red-600">{errors.confirmPassword.message}</p>
+                )}
+            </div>
 
-  return (
-    <div className="mx-auto w-full max-w-md rounded-lg border border-gray-300 bg-white p-6 shadow-md">
-      <h2 className="mb-6 text-center text-2xl font-bold text-gray-800">
-        Register
-      </h2>
+            <button
+                type="submit"
+                disabled={isSubmitting || pending}
+                className="h-10 w-full rounded-md bg-foreground text-background text-sm font-semibold hover:opacity-90 disabled:opacity-60"
+            >
+                { isSubmitting || pending ? "Creating account..." : "Create account"}
+            </button>
 
-      {error && (
-        <div className="mb-4 rounded-md bg-red-100 p-3 text-sm text-red-800">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mb-4 rounded-md bg-green-100 p-3 text-sm text-green-800">
-          Registration successful! Redirecting to login...
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Full Name */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Full Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            placeholder="John Doe"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 px-3 py-2
-                       focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-          />
-        </div>
-
-        {/* Email */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Email
-          </label>
-          <input
-            type="email"
-            name="email"
-            placeholder="you@example.com"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 px-3 py-2
-                       focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-          />
-        </div>
-
-        {/* Password */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <input
-            type="password"
-            name="password"
-            placeholder="••••••••"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 px-3 py-2
-                       focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-          />
-        </div>
-
-        {/* Confirm Password */}
-        <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="••••••••"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            className="w-full rounded-md border border-gray-300 px-3 py-2
-                       focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
-          />
-        </div>
-
-        {/* Submit */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full rounded-md bg-black py-2 font-semibold text-white
-                     hover:bg-gray-800 transition disabled:opacity-50"
-        >
-          {isLoading ? "Creating Account..." : "Create Account"}
-        </button>
-      </form>
-
-      {/* Login link */}
-      <p className="mt-4 text-center text-sm text-gray-600">
-        Already have an account?
-        <Link href="/login" className="ml-1 font-medium text-blue-600 hover:underline">
-          Login
-        </Link>
-      </p>
-    </div>
-  );
+            <div className="mt-1 text-center text-sm">
+                Already have an account? <Link href="/login" className="font-semibold hover:underline">Log in</Link>
+            </div>
+        </form>
+    );
 }
