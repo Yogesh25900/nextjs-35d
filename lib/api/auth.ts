@@ -10,3 +10,5 @@ export const  register = async(registrationData:any) =>{
     }
 }
 
+
+//make changes to auth ts
